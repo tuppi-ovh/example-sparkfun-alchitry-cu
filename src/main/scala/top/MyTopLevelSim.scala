@@ -1,4 +1,4 @@
-package mylib
+package top
 
 import spinal.core._
 import spinal.sim._

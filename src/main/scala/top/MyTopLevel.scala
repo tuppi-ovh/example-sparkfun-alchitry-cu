@@ -16,7 +16,7 @@
  * License along with this library.
  */
 
-package mylib
+package top
 
 import spinal.core._
 import spinal.lib._
