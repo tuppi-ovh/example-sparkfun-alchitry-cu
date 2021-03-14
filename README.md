@@ -1,4 +1,4 @@
-# Example of SpinalHDL Design on Sparkfun Alchitry CU
+# Example Sparkfun Alchitry CU
 
 ## Introduction
 
