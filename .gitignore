@@ -12,6 +12,7 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+perso/
 
 # Scala-IDE specific
 .scala_dependencies
@@ -27,7 +28,7 @@ bin/
 .settings
 .cache-main
 
-#User
+# User
 /*.vhd
 /*.v
 *.cf

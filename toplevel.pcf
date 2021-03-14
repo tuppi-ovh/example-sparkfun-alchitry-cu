@@ -1,0 +1,3 @@
+set_io clk P7
+set_io reset P8
+set_io io_led J11
