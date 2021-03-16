@@ -27,29 +27,31 @@ import blink._
 
 // Hardware definition
 class MyTopLevel extends Component {
-  val io = new Bundle {
-    val led = out Bool()
-  }
-
-  val blink = new Blink()
-
-  // connect IO
-  io.led := blink.io.led
+  // io
+  val LED0 = out Bool() 
+  val LED1 = out Bool() 
+  val LED2 = out Bool()
+  val LED3 = out Bool()
+  val LED4 = out Bool() 
+  val LED5 = out Bool()
+  val LED6 = out Bool()
+  val LED7 = out Bool() 
 }
 
-// Generate the MyTopLevel's Verilog
-//object MyTopLevelVerilog {
-//  def main(args: Array[String]) {
-//    SpinalVerilog(new MyTopLevel)
-//  }
-//}
-
-// Generate the MyTopLevel's VHDL
-//object MyTopLevelVhdl {
-//  def main(args: Array[String]) {
-//    SpinalVhdl(new MyTopLevel)
-//  }
-//}
+// Simple Blink Project 
+class SimpleBlinkDesign extends MyTopLevel {
+  // components
+  val blink = new Blink()
+  // connect io
+  LED0 := blink.io.led
+  LED1 := False
+  LED2 := False
+  LED3 := False
+  LED4 := False
+  LED5 := False
+  LED6 := False
+  LED7 := False
+}
 
 // Define a custom SpinalHDL configuration with synchronous reset instead of the default asynchronous one.
 // This configuration can be reused everywhere
@@ -58,6 +60,13 @@ object MySpinalConfig extends SpinalConfig(defaultConfigForClockDomains = ClockD
 // Generate the MyTopLevel's Verilog using the above custom configuration.
 object MyTopLevelVerilogWithCustomConfig {
   def main(args: Array[String]) {
-    MySpinalConfig.generateVerilog(new MyTopLevel)
+    if (args.length > 0) {
+      args(0) match {
+        case "SimpleBlinkDesign" => MySpinalConfig.generateVerilog(new SimpleBlinkDesign)
+        case _ => throw new Error("Design doesn't exist")
+      }
+    } else {
+      throw new Error("Design is not specified")
+    }
   }
 }

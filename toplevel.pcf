@@ -1,3 +1,10 @@
 set_io clk P7
 set_io reset P8
-set_io io_led J11
+set_io LED0 J11
+set_io LED1 K11
+set_io LED2 K12
+set_io LED3 K14
+set_io LED4 L12
+set_io LED5 L14
+set_io LED6 M12
+set_io LED7 N14
