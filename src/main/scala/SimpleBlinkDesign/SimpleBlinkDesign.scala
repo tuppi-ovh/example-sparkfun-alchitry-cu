@@ -1,5 +1,5 @@
 /**
- * Example of SpinalHDL Design on Sparkfun Alchitry CU.
+ * Examples of SpinalHDL Design on Sparkfun Alchitry CU.
  * Copyright (C) 2021 Vadim MUKHTAROV
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -18,30 +18,54 @@
  * For information on this project: tuppi.ovh@gmail.com.
  */
 
-package toplevel
+package SimpleBlinkDesign
 
+import PinOutComp._
+
+import scala.util.Random
 import spinal.core._
 import spinal.lib._
 
-import blink._
 
-// Hardware definition
-class MyTopLevel extends Component {
-  // io
-  val LED0 = out Bool() 
-  val LED1 = out Bool() 
-  val LED2 = out Bool()
-  val LED3 = out Bool()
-  val LED4 = out Bool() 
-  val LED5 = out Bool()
-  val LED6 = out Bool()
-  val LED7 = out Bool() 
+class BlinkComp extends Component {
+  val io = new Bundle {
+    val led = out Bool()
+  }
+
+  val random = new Random(42)
+
+  def randomBoolList(n : Int) : List[Bool] = {
+    val temp = if (random.nextInt(100) > 50) True else False
+    if (n == 0) List(temp) else temp :: randomBoolList(n - 1)
+  }
+
+  val divider_max = 10//5000000
+  val counter_max = 100
+
+  val counter = Reg(UInt(width = log2Up(counter_max) bits)) init 0
+  val divider = Reg(UInt(width = 32 bits)) init 0
+
+  val list = randomBoolList(counter_max)
+
+  // divide the clock
+  divider := divider + 1
+  when (divider > divider_max) {
+    divider := 0
+    when (counter >= counter_max) {
+      counter := 0
+    } otherwise {
+      counter := counter + 1
+    }
+  }
+
+  // output
+  io.led := list(counter)
 }
 
-// Simple Blink Project 
-class SimpleBlinkDesign extends MyTopLevel {
+// Simple Blink Design
+class SimpleBlinkDesign extends PinOutComp {
   // components
-  val blink = new Blink()
+  val blink = new BlinkComp()
   // connect io
   LED0 := blink.io.led
   LED1 := False
@@ -53,20 +77,9 @@ class SimpleBlinkDesign extends MyTopLevel {
   LED7 := False
 }
 
-// Define a custom SpinalHDL configuration with synchronous reset instead of the default asynchronous one.
-// This configuration can be reused everywhere
-object MySpinalConfig extends SpinalConfig(defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
-
 // Generate the MyTopLevel's Verilog using the above custom configuration.
-object MyTopLevelVerilogWithCustomConfig {
+object SimpleBlinkDesignVerilog {
   def main(args: Array[String]) {
-    if (args.length > 0) {
-      args(0) match {
-        case "SimpleBlinkDesign" => MySpinalConfig.generateVerilog(new SimpleBlinkDesign)
-        case _ => throw new Error("Design doesn't exist")
-      }
-    } else {
-      throw new Error("Design is not specified")
-    }
+    MySpinalConfig.generateVerilog(new SimpleBlinkDesign)
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Example of SpinalHDL Design on Sparkfun Alchitry CU.
+ * Examples of SpinalHDL Design on Sparkfun Alchitry CU.
  * Copyright (C) 2021 Vadim MUKHTAROV
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -18,22 +18,15 @@
  * For information on this project: tuppi.ovh@gmail.com.
  */
 
-package blink
+package master
 
 import spinal.core._
-import spinal.sim._
-import spinal.core.sim._
+import spinal.lib._
 
 import scala.util.Random
 
-
-object blinkSim {
-  def main(args: Array[String]) {
-    SimConfig.withWave.doSim(new Blink){dut =>
-      //Fork a process to generate the reset and the clock on the dut
-      dut.clockDomain.forkStimulus(period = 10)
-
-      sleep(100000)
-    }
+class Master extends Component {
+  val io = new Bundle {
+    val led = out Bool()
   }
 }

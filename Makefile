@@ -1,10 +1,14 @@
 
-DESIGN = SimpleBlinkDesign
+AVAILABLE_DESIGN = SimpleBlinkDesign ApbBlinkDesign
+
+ifndef DESIGN
+$(error DESIGN is not set. Choose one between $(AVAILABLE_DESIGN))
+endif
 
 
 bin/toplevel.v :
 	mkdir -p bin
-	sbt "runMain toplevel.MyTopLevelVerilogWithCustomConfig $(DESIGN)"
+	sbt "runMain $(DESIGN).$(DESIGN)Verilog"
 	mv $(DESIGN).v bin/toplevel.v
 
 bin/toplevel.blif : bin/toplevel.v
