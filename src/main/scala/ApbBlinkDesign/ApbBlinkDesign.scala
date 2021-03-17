@@ -18,31 +18,31 @@
  * For information on this project: tuppi.ovh@gmail.com.
  */
 
-package apb
+package ApbBlinkDesign
 
 import scala.collection.mutable._
 import spinal.core._
 import spinal.lib.bus.amba3.apb._
 import spinal.lib.bus.misc._
+
 import PinOutComp._
-import SimpleBlinkDesign.SimpleBlinkDesign
+import MasterComp._
 
 
-class ApbComp(ledWidth : Int) extends Component {
-  // io
-  val io = new Bundle {
-    val leds = out UInt (ledWidth bits)
-  }
+class ApbBlinkDesign extends PinOutComp {
+  // config
+  val ledWidth = 8
+  val dataWidth = 32
+  val addrWidth = 20 // from 0x00000 to 0xFFFFF
+  // regs
+  val leds = Reg(UInt(ledWidth bits))
 
   // apb leds
   val ledCtrl = Apb3Gpio(gpioWidth = ledWidth, withReadSync = true)
-  ledCtrl.io.gpio.asOutput()
-  for (i <- 0 until ledWidth) {
-    io.leds(i) := ledCtrl.io.gpio.asBits(i)
-  }
+  ledCtrl.io.gpio.read := 0
 
   // apb master
-  val apbMaster = Apb3Dummy(config = Apb3Config(addressWidth = 20, dataWidth = 32))
+  val apbMaster = new MasterComp(config = Apb3Config(addressWidth = addrWidth, dataWidth = dataWidth))
 
   // apb slaves
   val apbSlaves = ArrayBuffer[(Apb3, SizeMapping)]()
@@ -52,26 +52,21 @@ class ApbComp(ledWidth : Int) extends Component {
     master = apbMaster.io.apb,
     slaves = apbSlaves
   )
-}
 
-// Apb Blink Design
-class ApbBlinkDesign extends PinOutComp {
-  // components
-  val apb = new ApbComp(8)
   // connect io
-  LED0 := apb.io.leds.asBits(0)
-  LED1 := False
-  LED2 := False
-  LED3 := False
-  LED4 := False
-  LED5 := False
-  LED6 := False
-  LED7 := False
+  LED0 := ledCtrl.io.gpio.write.asBits(0)
+  LED1 := ledCtrl.io.gpio.write.asBits(1)
+  LED2 := ledCtrl.io.gpio.write.asBits(2)
+  LED3 := ledCtrl.io.gpio.write.asBits(3)
+  LED4 := ledCtrl.io.gpio.write.asBits(4)
+  LED5 := ledCtrl.io.gpio.write.asBits(5)
+  LED6 := ledCtrl.io.gpio.write.asBits(6)
+  LED7 := ledCtrl.io.gpio.write.asBits(7)
 }
 
 // Generate the MyTopLevel's Verilog using the above custom configuration.
 object ApbBlinkDesignVerilog {
   def main(args: Array[String]) {
-    MySpinalConfig.generateVerilog(new SimpleBlinkDesign)
+    MySpinalConfig.generateVerilog(new ApbBlinkDesign)
   }
 }

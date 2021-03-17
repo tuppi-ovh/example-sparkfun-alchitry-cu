@@ -18,11 +18,11 @@ This design makes one board LED to blink with randomly choosen on / off time.
 
 ```plantuml
 @startuml
-rectangle toplevel {
-  rectangle blink
+rectangle SimpleBlinkDesign  {
+  rectangle BlinkComp
 }
 circle "LED[0]" as led
-blink -> led
+BlinkComp -> led
 
 @enduml
 ```
@@ -33,14 +33,14 @@ In this design I start to use a APB bus to set the LEDs state.
 
 ```plantuml
 @startuml
-rectangle toplevel {
-  rectangle master
+rectangle ApbBlinkDesign {
+  rectangle MasterComp
   rectangle "\n\napb\n\n" as bus
-  rectangle gpio
+  rectangle Apb3gpio as gpio
 }
 circle "LED[0..7]" as leds
 gpio -> leds
-master -> bus 
+MasterComp -> bus 
 bus -> gpio
 
 
@@ -57,3 +57,4 @@ Refer to the [LICENSE](LICENSE) file.
 
 - [Alchitry Loader for Windows](https://github.com/alchitry/alchitry-loader-gui/blob/master/build/work/alchitry-loader-1.0.0-windows.zip)
 
+- [APB Buss Specification PDF](https://web.eecs.umich.edu/~prabal/teaching/eecs373-f12/readings/ARM_AMBA3_APB.pdf)
