@@ -18,22 +18,43 @@
  * For information on this project: tuppi.ovh@gmail.com.
  */
 
-package ApbBlinkDesign
+package HelloWorldDesign
 
 import scala.collection.mutable._
 import spinal.core._
 import spinal.lib.bus.amba3.apb._
 import spinal.lib.bus.misc._
+import spinal.lib.com.uart._
 
 import PinOutComp._
 import MasterComp._
 
 
-class ApbBlinkDesign extends PinOutComp {
+class HelloWorldDesign extends PinOutComp {
   // config
   val ledWidth = 8
   val dataWidth = 32
   val addrWidth = 20 // from 0x00000 to 0xFFFFF
+  val uartCtrlConfig = UartCtrlMemoryMappedConfig(
+    uartCtrlConfig = UartCtrlGenerics(
+      dataWidthMax      = 8,
+      clockDividerWidth = 20,
+      preSamplingSize   = 1,
+      samplingSize      = 3,
+      postSamplingSize  = 1
+    ),
+    initConfig = UartCtrlInitConfig(
+      baudrate = 115200,
+      dataLength = 7,  //7 => 8 bits
+      parity = UartParityType.NONE,
+      stop = UartStopType.ONE
+    ),
+    busCanWriteClockDividerConfig = false,
+    busCanWriteFrameConfig = false,
+    txFifoDepth = 16,
+    rxFifoDepth = 16
+  )
+
   // regs
   val leds = Reg(UInt(ledWidth bits))
 
@@ -41,12 +62,16 @@ class ApbBlinkDesign extends PinOutComp {
   val ledCtrl = Apb3Gpio(gpioWidth = ledWidth, withReadSync = true)
   ledCtrl.io.gpio.read := 0
 
+  // apb uart
+  val uartCtrl = Apb3UartCtrl(uartCtrlConfig)
+
   // apb master
   val apbMaster = new ApbBlinkMasterComp(config = Apb3Config(addressWidth = addrWidth, dataWidth = dataWidth))
 
   // apb slaves
   val apbSlaves = ArrayBuffer[(Apb3, SizeMapping)]()
   apbSlaves += ledCtrl.io.apb -> (0x00000, 4 KiB)
+  apbSlaves += uartCtrl.io.apb -> (0x10000, 4 KiB)
 
   val apbDecoder = Apb3Decoder(
     master = apbMaster.io.apb,
@@ -66,8 +91,8 @@ class ApbBlinkDesign extends PinOutComp {
 }
 
 // Generate the MyTopLevel's Verilog using the above custom configuration.
-object ApbBlinkDesignVerilog {
+object HelloWorldDesignVerilog {
   def main(args: Array[String]) {
-    MySpinalConfig.generateVerilog(new ApbBlinkDesign)
+    MySpinalConfig.generateVerilog(new HelloWorldDesign)
   }
 }

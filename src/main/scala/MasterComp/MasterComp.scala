@@ -20,97 +20,124 @@
 
 package MasterComp
 
-import spinal.core._
+import spinal.core.{UInt, _}
 import spinal.lib._
 import spinal.lib.bus.amba3.apb._
 import spinal.lib.fsm._
 
-// MasterComp Component
-class MasterComp(config : Apb3Config) extends Component {
+abstract class MasterComp(config : Apb3Config) extends Component {
   val io = new Bundle {
     val apb = master(Apb3(config))
   }
 
-  // data
-  val lenVec = 9
-  val addrVec = Vec(UInt(config.addressWidth bits), lenVec)
-  val dataVec = Vec(UInt(config.dataWidth bits), lenVec)
-  addrVec(0) := 0x00008; dataVec(0) := 0xFF // GPIO Write Enable
-  for (i <- 0 until (lenVec - 1)) {
-    addrVec(1 + i) := 0x00004; dataVec(1 + i) := (1 << i) // GPIO Write
+  def _handle(data : List[(Int, Int)]) = {
+
+    // convert list to vec
+    val lenVec = data.length
+    val addrVec = Vec(UInt(config.addressWidth bits), lenVec)
+    val dataVec = Vec(UInt(config.dataWidth bits), lenVec)
+    for (i <- 0 until lenVec) {
+      addrVec(i) := data(i)._1
+      dataVec(i) := data(i)._2
+    }
+
+    // registers
+    val paddr = Reg(UInt(config.addressWidth bits)) init 0
+    val pwdata = Reg(Bits(config.dataWidth bits)) init 0
+    val pwrite = Reg(Bool) init False
+    val penable = Reg(Bool) init False
+    val psel = Reg(Bool) init False
+
+    // counters
+    val waitCounterMax = 255
+    val waitCounter = Reg(UInt(log2Up(waitCounterMax) bits)) init 0
+    val vecCounter = Reg(UInt(log2Up(lenVec) bits)) init 0
+
+    // state machine
+    val fsm = new StateMachine {
+
+      val stateStart: State = new State with EntryPoint {
+        whenIsActive {
+          paddr := addrVec(vecCounter)
+          pwdata := dataVec(vecCounter).asBits
+          when(vecCounter < lenVec) {
+            vecCounter := vecCounter + 1
+          } otherwise {
+            vecCounter := 0
+          }
+          goto(stateWrite)
+        }
+      }
+
+      val stateWrite: State = new State {
+        whenIsActive {
+          pwrite := True
+          psel := True
+          goto(stateEnable)
+        }
+      }
+
+      val stateEnable: State = new State {
+        whenIsActive {
+          penable := True
+          goto(stateWaitReady)
+        }
+      }
+
+      val stateWaitReady: State = new State {
+        whenIsActive {
+          when(io.apb.PREADY) {
+            penable := False
+            psel := False
+            goto(stateWait)
+          }
+        }
+      }
+
+      val stateWait: State = new State {
+        onEntry(waitCounter := 0)
+        whenIsActive {
+          when(waitCounter < waitCounterMax) {
+            waitCounter := waitCounter + 1
+          } otherwise {
+            goto(stateStart)
+          }
+        }
+      }
+
+      // io
+      io.apb.PADDR := paddr
+      io.apb.PWRITE := pwrite
+      io.apb.PENABLE := penable
+      io.apb.PWDATA := pwdata
+      for (i <- 0 until config.selWidth) {
+        io.apb.PSEL(i) := psel
+      }
+    }
+  }
+}
+
+
+// MasterComp Component for ApbBlinkDesign
+class ApbBlinkMasterComp(config : Apb3Config) extends MasterComp(config) {
+
+  var data = List((0x00004, 0x00)) // GPIO Write Init
+  data = (0x00008, 0xFF) :: data // GPIO Write Enable
+  for (i <- 0 until 10) {
+    data = (0x00004, 1 << i) :: data // GPIO Write
   }
 
-  // registers
-  val paddr = Reg(UInt(config.addressWidth bits)) init 0
-  val pwdata = Reg(Bits(config.dataWidth bits)) init 0
-  val pwrite = Reg(Bool) init False
-  val penable = Reg(Bool) init False
-  val psel = Reg(Bool) init False
+  _handle(data.reverse)
+}
 
-  // counters
-  val waitCounterMax = 255
-  val waitCounter = Reg(UInt(log2Up(waitCounterMax) bits)) init 0
-  val vecCounter = Reg(UInt(log2Up(lenVec) bits)) init 0
 
-  // state machine
-  val fsm = new StateMachine {
+// MasterComp Component for HelloWorldDesign
+class HelloWorldMasterComp(config : Apb3Config) extends MasterComp(config) {
 
-    val stateStart : State = new State with EntryPoint {
-      whenIsActive {
-        paddr := addrVec(vecCounter)
-        pwdata := dataVec(vecCounter).asBits
-        when (vecCounter < lenVec) {
-          vecCounter := vecCounter + 1
-        } otherwise {
-          vecCounter := 0
-        }
-        goto(stateWrite)
-      }
-    }
-
-    val stateWrite : State = new State {
-      whenIsActive {
-        pwrite := True
-        psel := True
-        goto(stateEnable)
-      }
-    }
-
-    val stateEnable : State = new State {
-      whenIsActive {
-        penable := True
-        goto(stateWaitReady)
-      }
-    }
-
-    val stateWaitReady : State = new State {
-      whenIsActive {
-        when(io.apb.PREADY) {
-          penable := False
-          psel := False
-          goto(stateWait)
-        }
-      }
-    }
-
-    val stateWait : State = new State {
-      onEntry(waitCounter := 0)
-      whenIsActive {
-        when(waitCounter < waitCounterMax) {
-          waitCounter := waitCounter + 1
-        } otherwise {
-          goto(stateStart)
-        }
-      }
-    }
-
-    // io
-    io.apb.PADDR := paddr
-    io.apb.PWRITE := pwrite
-    io.apb.PENABLE := penable
-    io.apb.PWDATA := pwdata
-    for (i <- 0 until config.selWidth) {
-      io.apb.PSEL(i) := psel
-    }
+  var data = List((0x00008, 0xFF)) // GPIO Write Enable
+  for (i <- 1 until 11) {
+    data = (0x00004, 1 << (i - 1)) :: data // GPIO Write
   }
+
+  _handle(data.reverse)
 }

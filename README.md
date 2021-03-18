@@ -23,7 +23,6 @@ rectangle SimpleBlinkDesign  {
 }
 circle "LED[0]" as led
 BlinkComp -> led
-
 @enduml
 ```
 
@@ -35,15 +34,37 @@ In this design I start to use a APB bus to set the LEDs state.
 @startuml
 rectangle ApbBlinkDesign {
   rectangle MasterComp
-  rectangle "\n\napb\n\n" as bus
+  rectangle "\n\napb\nbus\n\n" as apb
   rectangle Apb3gpio as gpio
 }
 circle "LED[0..7]" as leds
 gpio -> leds
-MasterComp -> bus 
-bus -> gpio
+MasterComp -> apb 
+apb -> gpio
+@enduml
+```
 
+## Hello World Design
 
+In this design I connect UART to the APB bus with a simple state machine to handle commands.
+
+```plantuml
+@startuml
+rectangle HelloWorldDesign {
+  rectangle MasterComp
+  rectangle "\n\napb\nbus\n\n" as apb
+  rectangle Apb3gpio as gpio
+  rectangle Apb3Uart as uart
+}
+circle "LED[0..7]" as io_leds
+circle "RX / TX" as io_uart
+
+MasterComp -> apb 
+apb -> gpio
+gpio -> io_leds
+apb -> uart
+uart -> io_uart
+gpio --[hidden] uart
 @enduml
 ```
 

@@ -8,3 +8,5 @@ set_io LED4 L12
 set_io LED5 L14
 set_io LED6 M12
 set_io LED7 N14
+set_io USB_TX P14
+set_io USB_RX M9

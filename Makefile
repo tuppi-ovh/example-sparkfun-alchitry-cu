@@ -1,5 +1,5 @@
 
-AVAILABLE_DESIGN = SimpleBlinkDesign ApbBlinkDesign
+AVAILABLE_DESIGN = SimpleBlinkDesign ApbBlinkDesign HelloWorldDesign
 
 ifndef DESIGN
 $(error DESIGN is not set. Choose one between $(AVAILABLE_DESIGN))

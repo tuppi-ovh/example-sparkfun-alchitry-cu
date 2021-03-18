@@ -26,7 +26,7 @@ import spinal.lib.io._
 
 
 // Hardware definition
-class PinOutComp extends Component {
+abstract class PinOutComp extends Component {
   // io
   val LED0 = out Bool() 
   val LED1 = out Bool() 
@@ -35,7 +35,9 @@ class PinOutComp extends Component {
   val LED4 = out Bool() 
   val LED5 = out Bool()
   val LED6 = out Bool()
-  val LED7 = out Bool() 
+  val LED7 = out Bool()
+  val USB_TX = out Bool()
+  val USB_RX = in Bool()
 }
 
 // Define a custom SpinalHDL configuration with synchronous reset instead of the default asynchronous one.
