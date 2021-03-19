@@ -50,6 +50,7 @@ In this design I connect UART to the APB bus with a simple state machine to hand
 
 ```plantuml
 @startuml
+skinparam linetype ortho
 rectangle HelloWorldDesign {
   rectangle MasterComp
   rectangle "\n\napb\nbus\n\n" as apb
@@ -62,11 +63,14 @@ circle "RX / TX" as io_uart
 MasterComp -> apb 
 apb -> gpio
 gpio -> io_leds
-apb -> uart
-uart -> io_uart
+apb <-> uart
+uart <-> io_uart
 gpio --[hidden] uart
 @enduml
 ```
+
+![image.png](http://www.plantuml.com/plantuml/png/POv1ImD138Nlyoj2xws21oyY5Ijuq8ie5hf5iZjXEvZD39dPWuZ_tSteMegNJ5w-bpTPvu9Qne5TVW-IK7403aBb8n54BOVebBg2qZF1FJ77rwZiDvH3B_3f08xu4NCXlOr3EXal6ca4Kzj8EsRh5u0Pfi69woQr5tqAqPYz_-0BQZ4uJg_xSbtGpi8VxZQxyzNgSbzJGtnZylcFFctX39wtCwkxxdWdBA_j471JiRv-RCN4d6NiQj9rsOgfEUtNlTmTWlSa-n_NciIF0ty3)
+
 
 ## License 
 
