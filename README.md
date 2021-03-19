@@ -16,58 +16,17 @@ The aim of this repository is to try to implement SpinalHDL designs from scratch
 
 This design makes one board LED to blink with randomly choosen on / off time.
 
-```plantuml
-@startuml
-rectangle SimpleBlinkDesign  {
-  rectangle BlinkComp
-}
-circle "LED[0]" as led
-BlinkComp -> led
-@enduml
-```
+![image.png](http://www.plantuml.com/plantuml/png/SoWkIImgAStDuIfAJIv9p4lFILK8pimjo4broidCotP9BSvCprDGgEPIK40e04ivv-SMSDLo9MSM9GE5b7nSNQ8DOfKK4eiLSb9JkE1A57Jjm08EgNafG6i0)
 
 ## Apb Blink Design 
 
 In this design I start to use a APB bus to set the LEDs state.
 
-```plantuml
-@startuml
-rectangle ApbBlinkDesign {
-  rectangle MasterComp
-  rectangle "\n\napb\nbus\n\n" as apb
-  rectangle Apb3gpio as gpio
-}
-circle "LED[0..7]" as leds
-gpio -> leds
-MasterComp -> apb 
-apb -> gpio
-@enduml
-```
+![image.png](http://www.plantuml.com/plantuml/png/LKyx3i8m3Drz2gix5H836ofGDZW1PKXRAuf8tIXE9yJTYSDGTKcUt-TPRYIPc9R9GwGX6RQUy1pwYtVyRacSPVm0uYe-Z2IArtaA6xhgk6CJ-exxHHHNQ0GpaLsRveCDRbPDV_Z2uEAW-VkjVUxh-lWgGK-ZG77kJlzXtPifBKR8Z-9Ir12F-OeV)
 
 ## Hello World Design
 
 In this design I connect UART to the APB bus with a simple state machine to handle commands.
-
-```plantuml
-@startuml
-skinparam linetype ortho
-rectangle HelloWorldDesign {
-  rectangle MasterComp
-  rectangle "\n\napb\nbus\n\n" as apb
-  rectangle Apb3gpio as gpio
-  rectangle Apb3Uart as uart
-}
-circle "LED[0..7]" as io_leds
-circle "RX / TX" as io_uart
-
-MasterComp -> apb 
-apb -> gpio
-gpio -> io_leds
-apb <-> uart
-uart <-> io_uart
-gpio --[hidden] uart
-@enduml
-```
 
 ![image.png](http://www.plantuml.com/plantuml/png/POv1ImD138Nlyoj2xws21oyY5Ijuq8ie5hf5iZjXEvZD39dPWuZ_tSteMegNJ5w-bpTPvu9Qne5TVW-IK7403aBb8n54BOVebBg2qZF1FJ77rwZiDvH3B_3f08xu4NCXlOr3EXal6ca4Kzj8EsRh5u0Pfi69woQr5tqAqPYz_-0BQZ4uJg_xSbtGpi8VxZQxyzNgSbzJGtnZylcFFctX39wtCwkxxdWdBA_j471JiRv-RCN4d6NiQj9rsOgfEUtNlTmTWlSa-n_NciIF0ty3)
 

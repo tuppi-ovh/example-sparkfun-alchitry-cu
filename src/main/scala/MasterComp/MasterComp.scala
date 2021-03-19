@@ -134,6 +134,7 @@ class ApbBlinkMasterComp(config : Apb3Config) extends MasterComp(config) {
 // MasterComp Component for HelloWorldDesign
 class HelloWorldMasterComp(config : Apb3Config) extends MasterComp(config) {
 
+  // LEDs
   var data = List((0x00008, 0xFF)) // GPIO Write Enable
   for (i <- 1 until 11) {
     data = (0x00004, 1 << (i - 1)) :: data // GPIO Write

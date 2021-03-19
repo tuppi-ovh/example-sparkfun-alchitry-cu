@@ -22,9 +22,45 @@ package SimpleBlinkDesign
 
 import spinal.core._
 import spinal.lib._
-
 import PinOutComp._
-import BlinkComp._
+
+import scala.util.Random
+
+
+class BlinkComp(seed : Int) extends Component {
+  val io = new Bundle {
+    val led = out Bool()
+  }
+
+  val random = new Random(seed)
+
+  def randomBoolList(n : Int) : List[Bool] = {
+    val temp = if (random.nextInt(100) > 50) True else False
+    if (n == 0) List(temp) else temp :: randomBoolList(n - 1)
+  }
+
+  val divider_max = 50000000 // 500 ms
+  val counter_max = 100
+
+  val counter = Reg(UInt(width = log2Up(counter_max) bits)) init 0
+  val divider = Reg(UInt(width = 32 bits)) init 0
+
+  val list = randomBoolList(counter_max)
+
+  // divide the clock
+  divider := divider + 1
+  when (divider > divider_max) {
+    divider := 0
+    when (counter >= counter_max) {
+      counter := 0
+    } otherwise {
+      counter := counter + 1
+    }
+  }
+
+  // output
+  io.led := list(counter)
+}
 
 
 // Simple Blink Design
@@ -34,11 +70,11 @@ class SimpleBlinkDesign extends PinOutComp {
   // connect io
   LED0 := blink.io.led
   LED1 := False
-  LED2 := False
+  LED2 := True
   LED3 := False
-  LED4 := False
+  LED4 := True
   LED5 := False
-  LED6 := False
+  LED6 := True
   LED7 := False
   USB_TX := False
 }
