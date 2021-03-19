@@ -1,5 +1,5 @@
 /**
- * Example of SpinalHDL Design on Sparkfun Alchitry CU.
+ * Examples of SpinalHDL Design on Sparkfun Alchitry CU.
  * Copyright (C) 2021 Vadim MUKHTAROV
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -18,26 +18,28 @@
  * For information on this project: tuppi.ovh@gmail.com.
  */
 
-package blink
+package SimpleBlinkDesign
 
 import spinal.core._
 import spinal.lib._
+import PinOutComp._
 
 import scala.util.Random
 
-class Blink extends Component {
+
+class BlinkComp(seed : Int) extends Component {
   val io = new Bundle {
     val led = out Bool()
   }
 
-  val random = new Random(42)
+  val random = new Random(seed)
 
   def randomBoolList(n : Int) : List[Bool] = {
     val temp = if (random.nextInt(100) > 50) True else False
     if (n == 0) List(temp) else temp :: randomBoolList(n - 1)
   }
 
-  val divider_max = 10//5000000
+  val divider_max = 50000000 // 500 ms
   val counter_max = 100
 
   val counter = Reg(UInt(width = log2Up(counter_max) bits)) init 0
@@ -58,4 +60,28 @@ class Blink extends Component {
 
   // output
   io.led := list(counter)
+}
+
+
+// Simple Blink Design
+class SimpleBlinkDesign extends PinOutComp {
+  // components
+  val blink = new BlinkComp(42)
+  // connect io
+  LED0 := blink.io.led
+  LED1 := False
+  LED2 := True
+  LED3 := False
+  LED4 := True
+  LED5 := False
+  LED6 := True
+  LED7 := False
+  USB_TX := False
+}
+
+// Generate the MyTopLevel's Verilog using the above custom configuration.
+object SimpleBlinkDesignVerilog {
+  def main(args: Array[String]) {
+    MySpinalConfig.generateVerilog(new SimpleBlinkDesign)
+  }
 }

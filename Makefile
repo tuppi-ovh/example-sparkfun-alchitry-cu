@@ -1,12 +1,18 @@
-VERILOG = bin/toplevel.v
+
+AVAILABLE_DESIGN = SimpleBlinkDesign ApbBlinkDesign HelloWorldDesign
+
+ifndef DESIGN
+$(error DESIGN is not set. Choose one between $(AVAILABLE_DESIGN))
+endif
+
 
 bin/toplevel.v :
 	mkdir -p bin
-	sbt "runMain toplevel.MyTopLevelVerilogWithCustomConfig"
-	mv MyTopLevel.v bin/toplevel.v
+	sbt "runMain $(DESIGN).$(DESIGN)Verilog"
+	mv $(DESIGN).v bin/toplevel.v
 
-bin/toplevel.blif : ${VERILOG} 
-	yosys -v3 -p "synth_ice40 -top MyTopLevel -blif bin/toplevel.blif" ${VERILOG}
+bin/toplevel.blif : bin/toplevel.v
+	yosys -v3 -p "synth_ice40 -top $(DESIGN) -blif bin/toplevel.blif" bin/toplevel.v
 
 bin/toplevel.asc : toplevel.pcf bin/toplevel.blif
 	arachne-pnr -p toplevel.pcf -d 8k --max-passes 600 -P cb132 bin/toplevel.blif -o bin/toplevel.asc

@@ -1,5 +1,5 @@
 /**
- * Example of SpinalHDL Design on Sparkfun Alchitry CU.
+ * Examples of SpinalHDL Design on Sparkfun Alchitry CU.
  * Copyright (C) 2021 Vadim MUKHTAROV
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -18,46 +18,30 @@
  * For information on this project: tuppi.ovh@gmail.com.
  */
 
-package toplevel
+package PinOutComp
 
 import spinal.core._
 import spinal.lib._
+import spinal.lib.io._
 
-import blink._
 
 // Hardware definition
-class MyTopLevel extends Component {
-  val io = new Bundle {
-    val led = out Bool()
-  }
-
-  val blink = new Blink()
-
-  // connect IO
-  io.led := blink.io.led
+abstract class PinOutComp extends Component {
+  // io
+  val LED0 = out Bool() 
+  val LED1 = out Bool() 
+  val LED2 = out Bool()
+  val LED3 = out Bool()
+  val LED4 = out Bool() 
+  val LED5 = out Bool()
+  val LED6 = out Bool()
+  val LED7 = out Bool()
+  val USB_TX = out Bool()
+  val USB_RX = in Bool()
 }
-
-// Generate the MyTopLevel's Verilog
-//object MyTopLevelVerilog {
-//  def main(args: Array[String]) {
-//    SpinalVerilog(new MyTopLevel)
-//  }
-//}
-
-// Generate the MyTopLevel's VHDL
-//object MyTopLevelVhdl {
-//  def main(args: Array[String]) {
-//    SpinalVhdl(new MyTopLevel)
-//  }
-//}
 
 // Define a custom SpinalHDL configuration with synchronous reset instead of the default asynchronous one.
 // This configuration can be reused everywhere
 object MySpinalConfig extends SpinalConfig(defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
 
-// Generate the MyTopLevel's Verilog using the above custom configuration.
-object MyTopLevelVerilogWithCustomConfig {
-  def main(args: Array[String]) {
-    MySpinalConfig.generateVerilog(new MyTopLevel)
-  }
-}
+
