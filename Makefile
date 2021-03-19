@@ -27,3 +27,7 @@ time: bin/toplevel.bin
 
 clean :
 	rm -rf bin
+
+prepare :
+	mkdir -p ext
+	git clone https://github.com/SpinalHDL/SpinalHDL.git ext/SpinalHDL
