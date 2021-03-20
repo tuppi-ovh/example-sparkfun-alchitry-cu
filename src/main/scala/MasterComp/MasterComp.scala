@@ -49,7 +49,7 @@ abstract class MasterComp(config : Apb3Config) extends Component {
     val psel = Reg(Bool) init False
 
     // counters
-    val waitCounterMax = 255
+    val waitCounterMax = 10000000
     val waitCounter = Reg(UInt(log2Up(waitCounterMax) bits)) init 0
     val vecCounter = Reg(UInt(log2Up(lenVec) bits)) init 0
 
