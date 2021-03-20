@@ -42,6 +42,12 @@ abstract class PinOutComp extends Component {
 
 // Define a custom SpinalHDL configuration with synchronous reset instead of the default asynchronous one.
 // This configuration can be reused everywhere
-object MySpinalConfig extends SpinalConfig(defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
+object MySpinalConfig extends SpinalConfig(
+  defaultConfigForClockDomains = ClockDomainConfig(
+    clockEdge        = RISING,
+    resetKind        = ASYNC,
+    resetActiveLevel = LOW
+  )
+)
 
 

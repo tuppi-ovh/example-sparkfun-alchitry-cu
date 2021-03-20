@@ -70,11 +70,11 @@ class SimpleBlinkDesign extends PinOutComp {
   // connect io
   LED0 := blink.io.led
   LED1 := False
-  LED2 := True
+  LED2 := False
   LED3 := False
-  LED4 := True
+  LED4 := False
   LED5 := False
-  LED6 := True
+  LED6 := False
   LED7 := False
   USB_TX := False
 }

@@ -1,5 +1,5 @@
 set_io clk P7
-set_io reset P8
+set_io resetn P8
 set_io LED0 J11
 set_io LED1 K11
 set_io LED2 K12
