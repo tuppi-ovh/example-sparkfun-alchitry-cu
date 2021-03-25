@@ -29,7 +29,7 @@ import scala.util.Random
 
 object ApbBlinkDesignSim {
   def main(args: Array[String]) {
-    SimConfig.withWave.doSim(new ApbBlinkDesign){dut =>
+    SimConfig.withWave.doSim(new ApbBlinkDesign(waitTicks=10)) {dut =>
       //Fork a process to generate the reset and the clock on the dut
       dut.clockDomain.forkStimulus(period = 10)
 

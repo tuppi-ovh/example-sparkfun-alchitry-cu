@@ -47,7 +47,8 @@ object MySpinalConfig extends SpinalConfig(
     clockEdge        = RISING,
     resetKind        = ASYNC,
     resetActiveLevel = LOW
-  )
+  ),
+  defaultClockDomainFrequency = FixedFrequency(100 MHz)
 )
 
 

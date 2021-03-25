@@ -30,7 +30,7 @@ import PinOutComp._
 import MasterComp._
 
 
-class HelloWorldDesign extends PinOutComp {
+class HelloWorldDesign(waitTicks : Int) extends PinOutComp {
   // config
   val ledWidth = 8
   val dataWidth = 32
@@ -64,9 +64,23 @@ class HelloWorldDesign extends PinOutComp {
 
   // apb uart
   val uartCtrl = Apb3UartCtrl(uartCtrlConfig)
+  //uartCtrl.uartCtrl.io.config.setClockDivider(115.2 kHz, clkFrequency=100 MHz)
+
+  // gpio data
+  var data = List((0x00004, 0x00)) // GPIO Write Init
+  data = (0x00008, 0xFF) :: data // GPIO Write Enable
+  for (i <- 0 until 10) {
+    data = (0x00004, 1 << i) :: data // GPIO Write x 10 values
+  }
+  // uart data
+  var str = "Hello, world! \n"
+  for (s <- str) {
+    data = (0x10000, s.toInt) :: data // UART print "Hello, world!"
+  }
 
   // apb master
-  val apbMaster = new ApbBlinkMasterComp(config = Apb3Config(addressWidth = addrWidth, dataWidth = dataWidth))
+  val config = Apb3Config(addressWidth=addrWidth, dataWidth=dataWidth)
+  val apbMaster = new MasterComp(config=config, waitTicks=waitTicks, data=data.reverse)
 
   // apb slaves
   val apbSlaves = ArrayBuffer[(Apb3, SizeMapping)]()
@@ -93,6 +107,6 @@ class HelloWorldDesign extends PinOutComp {
 // Generate the MyTopLevel's Verilog using the above custom configuration.
 object HelloWorldDesignVerilog {
   def main(args: Array[String]) {
-    MySpinalConfig.generateVerilog(new HelloWorldDesign)
+    MySpinalConfig.generateVerilog(new HelloWorldDesign(waitTicks=10000000))
   }
 }

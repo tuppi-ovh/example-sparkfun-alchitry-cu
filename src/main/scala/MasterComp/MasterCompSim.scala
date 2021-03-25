@@ -23,11 +23,18 @@ package MasterComp
 import spinal.core.sim._
 import spinal.lib.bus.amba3.apb.Apb3Config
 
-object ApbBlinkMasterCompSim {
+object MasterCompSim {
   def main(args: Array[String]) {
     val config = Apb3Config(addressWidth = 20, dataWidth = 32)
 
-    SimConfig.withWave.doSim(new ApbBlinkMasterComp(config = config)) { dut =>
+    // master data
+    var data = List((0x00004, 0x00)) // GPIO Write Init
+    data = (0x00008, 0xFF) :: data // GPIO Write Enable
+    for (i <- 0 until 10) {
+      data = (0x00004, 1 << i) :: data // GPIO Write
+    }
+
+    SimConfig.withWave.doSim(new MasterComp(config, 10, data.reverse)) { dut =>
       // Fork a process to generate the reset and the clock on the dut
       dut.clockDomain.forkStimulus(period = 10)
 

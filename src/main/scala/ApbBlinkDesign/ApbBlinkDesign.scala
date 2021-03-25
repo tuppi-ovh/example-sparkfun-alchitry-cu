@@ -29,7 +29,7 @@ import PinOutComp._
 import MasterComp._
 
 
-class ApbBlinkDesign extends PinOutComp {
+class ApbBlinkDesign(waitTicks : Int) extends PinOutComp {
   // config
   val ledWidth = 8
   val dataWidth = 32
@@ -41,8 +41,16 @@ class ApbBlinkDesign extends PinOutComp {
   val ledCtrl = Apb3Gpio(gpioWidth = ledWidth, withReadSync = true)
   ledCtrl.io.gpio.read := 0
 
+  // master data
+  var data = List((0x00004, 0x00)) // GPIO Write Init
+  data = (0x00008, 0xFF) :: data // GPIO Write Enable
+  for (i <- 0 until 10) {
+    data = (0x00004, 1 << i) :: data // GPIO Write
+  }
+
   // apb master
-  val apbMaster = new ApbBlinkMasterComp(config = Apb3Config(addressWidth = addrWidth, dataWidth = dataWidth))
+  val config = Apb3Config(addressWidth=addrWidth, dataWidth=dataWidth)
+  val apbMaster = new MasterComp(config=config, waitTicks=waitTicks, data=data.reverse)
 
   // apb slaves
   val apbSlaves = ArrayBuffer[(Apb3, SizeMapping)]()
@@ -68,6 +76,6 @@ class ApbBlinkDesign extends PinOutComp {
 // Generate the MyTopLevel's Verilog using the above custom configuration.
 object ApbBlinkDesignVerilog {
   def main(args: Array[String]) {
-    MySpinalConfig.generateVerilog(new ApbBlinkDesign)
+    MySpinalConfig.generateVerilog(new ApbBlinkDesign(waitTicks=10000000))
   }
 }
