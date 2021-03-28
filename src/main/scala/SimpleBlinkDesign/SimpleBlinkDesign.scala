@@ -76,7 +76,7 @@ class SimpleBlinkDesign extends PinOutComp {
   LED5 := False
   LED6 := False
   LED7 := False
-  USB_TX := False
+  USB_RX := False // RX for FTDI chip
 }
 
 // Generate the MyTopLevel's Verilog using the above custom configuration.

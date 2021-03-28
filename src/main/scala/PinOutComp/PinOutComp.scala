@@ -36,8 +36,8 @@ abstract class PinOutComp extends Component {
   val LED5 = out Bool()
   val LED6 = out Bool()
   val LED7 = out Bool()
-  val USB_TX = out Bool()
-  val USB_RX = in Bool()
+  val USB_TX = in Bool() // TX for the FTDI chip
+  val USB_RX = out Bool() // RX for the FTDI chip
 }
 
 // Define a custom SpinalHDL configuration with synchronous reset instead of the default asynchronous one.

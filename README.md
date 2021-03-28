@@ -28,7 +28,7 @@ In this design I start to use a APB bus to set the LEDs state.
 
 In this design I connect UART to the APB bus with a simple state machine to handle commands.
 
-![image.png](http://www.plantuml.com/plantuml/png/POv1ImD138Nlyoj2xws21oyY5Ijuq8ie5hf5iZjXEvZD39dPWuZ_tSteMegNJ5w-bpTPvu9Qne5TVW-IK7403aBb8n54BOVebBg2qZF1FJ77rwZiDvH3B_3f08xu4NCXlOr3EXal6ca4Kzj8EsRh5u0Pfi69woQr5tqAqPYz_-0BQZ4uJg_xSbtGpi8VxZQxyzNgSbzJGtnZylcFFctX39wtCwkxxdWdBA_j471JiRv-RCN4d6NiQj9rsOgfEUtNlTmTWlSa-n_NciIF0ty3)
+![image.png](http://www.plantuml.com/plantuml/png/POvFImGn3CNl_HHXxmk2Lv4LL_2WDqLXPv7EDCmKqxJqpq74xsxJSHo6lQH9VY-lxv2oZhauKkdJSj1HEo3BcBy2WezvyYhYa3MFXF28HFxDHp97J7Pa-5O0AtxMAMEyzovirhkEEzQXxxWlIVeTw0HriL7TXVvw3DOBa_S2ljQS0ajzrOyQR1p4_EdXUBewDqlhFmXD-aSlxykwtQWr7-nl9G2eMgHl7qgHOR4HTbFdTYpb3xPv5kzFapK6-JoB3iYcEFe5)
 
 
 ## License 

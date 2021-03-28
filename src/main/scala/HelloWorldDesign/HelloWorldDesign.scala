@@ -44,7 +44,7 @@ class HelloWorldDesign(waitTicks : Int) extends PinOutComp {
       postSamplingSize  = 1
     ),
     initConfig = UartCtrlInitConfig(
-      baudrate = 115200,
+      baudrate = 38400,
       dataLength = 7,  //7 => 8 bits
       parity = UartParityType.NONE,
       stop = UartStopType.ONE
@@ -69,13 +69,21 @@ class HelloWorldDesign(waitTicks : Int) extends PinOutComp {
   // gpio data
   var data = List((0x00004, 0x00)) // GPIO Write Init
   data = (0x00008, 0xFF) :: data // GPIO Write Enable
+  for (i <- 0 until 11) {
+    data = (0x00004, i % 2) :: data // GPIO Write x 10 values
+  }
+  // dummy data
   for (i <- 0 until 10) {
-    data = (0x00004, 1 << i) :: data // GPIO Write x 10 values
+    data = (0xFFFFF, 0) :: data
   }
   // uart data
-  var str = "Hello, world! \n"
+  var str = "Hello, world! \n\r"
   for (s <- str) {
     data = (0x10000, s.toInt) :: data // UART print "Hello, world!"
+  }
+  // dummy data
+  for (i <- 0 until 10) {
+    data = (0xFFFFF, 0) :: data
   }
 
   // apb master
@@ -93,15 +101,17 @@ class HelloWorldDesign(waitTicks : Int) extends PinOutComp {
   )
 
   // connect io
-  LED0 := ledCtrl.io.gpio.write.asBits(0)
-  LED1 := ledCtrl.io.gpio.write.asBits(1)
-  LED2 := ledCtrl.io.gpio.write.asBits(2)
-  LED3 := ledCtrl.io.gpio.write.asBits(3)
-  LED4 := ledCtrl.io.gpio.write.asBits(4)
-  LED5 := ledCtrl.io.gpio.write.asBits(5)
-  LED6 := ledCtrl.io.gpio.write.asBits(6)
-  LED7 := ledCtrl.io.gpio.write.asBits(7)
-  USB_TX := False
+  LED0 := ledCtrl.io.gpio.write.asBits(0) // heart beat
+  LED1 := False
+  LED2 := False
+  LED3 := False
+  LED4 := False
+  LED5 := False
+  LED6 := !USB_TX // receive activity
+  LED7 := !uartCtrl.io.uart.txd // sending activity
+  USB_RX := uartCtrl.io.uart.txd // RX for FTDI chip
+
+  uartCtrl.io.uart.rxd := True // to not block the txd
 }
 
 // Generate the MyTopLevel's Verilog using the above custom configuration.

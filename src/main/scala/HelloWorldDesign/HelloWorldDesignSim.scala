@@ -19,6 +19,7 @@
  */
 
 package HelloWorldDesign
+import PinOutComp.MySpinalConfig
 
 import spinal.core._
 import spinal.sim._
@@ -27,11 +28,12 @@ import spinal.core.sim._
 
 object HelloWorldDesignSim {
   def main(args: Array[String]) {
-    SimConfig.withWave.doSim(new HelloWorldDesign(10)){dut =>
+    SimConfig.withConfig(MySpinalConfig).withWave.doSim(new HelloWorldDesign(100)){dut =>
       //Fork a process to generate the reset and the clock on the dut
       dut.clockDomain.forkStimulus(period = 10)
+      dut.USB_TX #= true // TX for the FTDI chip
 
-      sleep(100000)
+      sleep(10000000)
     }
   }
 }

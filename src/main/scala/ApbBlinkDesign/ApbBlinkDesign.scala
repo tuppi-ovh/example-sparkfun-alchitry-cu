@@ -70,7 +70,7 @@ class ApbBlinkDesign(waitTicks : Int) extends PinOutComp {
   LED5 := ledCtrl.io.gpio.write.asBits(5)
   LED6 := ledCtrl.io.gpio.write.asBits(6)
   LED7 := ledCtrl.io.gpio.write.asBits(7)
-  USB_TX := False
+  USB_RX := False // RX for FTDI chip
 }
 
 // Generate the MyTopLevel's Verilog using the above custom configuration.
