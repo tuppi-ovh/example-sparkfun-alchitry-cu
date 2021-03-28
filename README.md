@@ -26,9 +26,16 @@ In this design I start to use a APB bus to set the LEDs state.
 
 ## Hello World Design
 
-In this design I connect UART to the APB bus with a simple state machine to handle commands.
+In this design I connect an UART to the APB bus to send "Hello, world!" message.
 
 ![image.png](assets/HelloWorldDesign.png)
+
+## SRAM Design
+
+In this design I connect a SRAM using blackbox to the APB bus with a simple state machine 
+to send its content by the UART.
+
+![image.png](assets/SramDesign.png)
 
 
 ## License 
