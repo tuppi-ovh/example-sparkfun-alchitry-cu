@@ -32,8 +32,8 @@ In this design I connect an UART to the APB bus to send "Hello, world!" message.
 
 ## SRAM Design
 
-In this design I connect a SRAM using blackbox to the APB bus with a simple state machine 
-to send its content by the UART.
+In this design I integrate a BMB bus and a SRAM memory. A simple state machine 
+will be used to send the memory content by the UART.
 
 ![image.png](assets/SramDesign.png)
 
