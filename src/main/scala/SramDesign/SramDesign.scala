@@ -26,9 +26,13 @@ import spinal.lib.bus.amba3.apb._
 import spinal.lib.bus.misc._
 import spinal.lib.com.uart._
 import PinOutComp._
-import MasterComp._
+import MasterBmbComp._
 import spinal.lib.bus.amba3.ahblite._
-import spinal.lib.bus.bmb.{BmbAccessParameter, BmbBridgeGenerator, BmbInterconnectGenerator, BmbOnChipRam, BmbToApb3Bridge}
+import spinal.lib.bus.bmb._
+import spinal.lib.generator.Handle
+
+import scala.collection.mutable
+import scala.reflect.internal.util.NoPosition.source
 
 
 class SramDesign(waitTicks : Int) extends PinOutComp {
@@ -57,15 +61,15 @@ class SramDesign(waitTicks : Int) extends PinOutComp {
   )
   val apbConfig = Apb3Config(addressWidth=addrWidth, dataWidth=dataWidth)
   val ahbConfig = AhbLite3Config(addressWidth=addrWidth, dataWidth=dataWidth)
-
-  // regs
-  //val leds = Reg(UInt(ledWidth bits))
-
-  // bmb ram
-  val requirements = BmbAccessParameter(addressWidth=addrWidth, dataWidth=dataWidth)
-  var bmbRam = BmbOnChipRam(
-    p = requirements.toBmbParameter(),
-    size = 12 KiB
+  val capabilities = BmbAccessCapabilities(addressWidth=addrWidth, dataWidth=dataWidth)
+  val source = BmbSourceParameter(
+    contextWidth=0,
+    lengthWidth=log2Up(dataWidth/8)
+  )
+  val requirements = BmbAccessParameter(
+    addressWidth=addrWidth,
+    dataWidth=dataWidth,
+    sources=mutable.LinkedHashMap(0 -> source)
   )
 
   // bmb to apb bridge
@@ -73,17 +77,6 @@ class SramDesign(waitTicks : Int) extends PinOutComp {
     apb3Config=apbConfig,
     bmbParameter=requirements.toBmbParameter(),
     true
-  )
-  //bmbBridge.io.input <> bmbRam.io.bus
-
-  // bmb interconnect
-  val bmbInterconnect = BmbInterconnectGenerator()
-  val bmbBridge = BmbBridgeGenerator()(bmbInterconnect)
-
-  bmbInterconnect.setDefaultArbitration(BmbInterconnectGenerator.STATIC_PRIORITY)
-  bmbInterconnect.addConnection(
-    // Master -> List(bmbBridge.bmb)
-    bmbBridge.bmb -> List(bmbRam.io.bus, bmbApbBridge.io.input)
   )
 
   // apb leds
@@ -94,27 +87,46 @@ class SramDesign(waitTicks : Int) extends PinOutComp {
   val uartCtrl = Apb3UartCtrl(uartCtrlConfig)
 
   // gpio data
-  var data = List((0x00004, 0x00)) // GPIO Write Init
-  data = (0x00008, 0xFF) :: data // GPIO Write Enable
+  var data = List((0x00004, 0x00, 1)) // GPIO Write Init
+  data = (0x00008, 0xFF, 1) :: data // GPIO Write Enable
   for (i <- 0 until 11) {
-    data = (0x00004, i % 2) :: data // GPIO Write x 10 values
+    data = (0x00004, i % 2, 1) :: data // GPIO Write x 10 values
   }
   // dummy data
   for (i <- 0 until 10) {
-    data = (0xFFFFF, 0) :: data
+    data = (0xFFFFF, 0, 1) :: data
   }
   // uart data
   var str = "Hello, world! \n\r"
   for (s <- str) {
-    data = (0x10000, s.toInt) :: data // UART print "Hello, world!"
+    data = (0x10000, s.toInt, 1) :: data // UART print "Hello, world!"
   }
   // dummy data
   for (i <- 0 until 10) {
-    data = (0xFFFFF, 0) :: data
+    data = (0xFFFFF, 0, 1) :: data
   }
 
-  // apb master
-  val apbMaster = new MasterComp(config=apbConfig, waitTicks=waitTicks, data=data.reverse)
+  // bmb master
+  val bmbMaster = new MasterBmbComp(param=requirements.toBmbParameter(), waitTicks=waitTicks, data=data.reverse)
+
+  ////// this works great:
+  // bmbMaster.io.bmb <> bmbApbBridge.io.input
+
+  ////// ... but not this:
+  val bmbInterconnect = BmbInterconnectGenerator()
+  bmbInterconnect.setDefaultArbitration(BmbInterconnectGenerator.STATIC_PRIORITY)
+  // master
+  bmbInterconnect.addMaster(
+    accessRequirements=Handle(requirements),
+    bus=Handle(bmbMaster.io.bmb)
+  )
+  // slave
+  bmbInterconnect.addSlave(
+    accessRequirements=Handle(requirements),
+    accessCapabilities=Handle(capabilities),
+    bus=Handle(bmbApbBridge.io.input),
+    mapping=Handle(SizeMapping(0x0000, 4 KiB))
+  )
 
   // apb slaves
   val apbSlaves = ArrayBuffer[(Apb3, SizeMapping)]()
