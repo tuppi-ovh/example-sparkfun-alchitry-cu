@@ -24,84 +24,98 @@ import spinal.core.{UInt, _}
 import spinal.lib._
 import spinal.lib.bus.bmb.{Bmb, BmbParameter}
 import spinal.lib.fsm._
+import spinal.lib.generator.Handle
 
-class MasterBmbComp(param : BmbParameter, waitTicks : Int, data : List[(Int, Int, Int)]) extends Component {
-  val io = new Bundle {
-    val bmb = master(Bmb(param))
-  }
+class MasterBmbComp(waitTicks : Int) extends Component {
+  // Handles
+  val bmbParam = Handle[BmbParameter]
+  val cmdData = Handle[List[(Int, Int, Int)]]
 
-  // convert list to vec
-  val lenVec = data.length
-  val addrVec = Vec(UInt(param.access.addressWidth bits), lenVec)
-  val dataVec = Vec(UInt(param.access.dataWidth bits), lenVec)
-  val opcodeVec = Vec(UInt(1 bits), lenVec)
-  for (i <- 0 until lenVec) {
-    addrVec(i) := data(i)._1
-    dataVec(i) := data(i)._2
-    opcodeVec(i) := data(i)._3
-  }
+  // elaborate Handles
+  val logic = Handle(new Area {
 
-  // registers
-  val addr = Reg(UInt(param.access.addressWidth bits)) init 0
-  val wdata = Reg(Bits(param.access.dataWidth bits)) init 0
-  val opcode = Reg(Bits(1 bits)) init 0
-  val valid = Reg(Bool) init False
-  val ready = Reg(Bool) init True
+    // handles
+    val param = bmbParam.get
+    val data = cmdData.get
 
-  // counters
-  val waitCounterMax = waitTicks
-  val waitCounter = Reg(UInt(log2Up(waitCounterMax) bits)) init 0
-  val vecCounter = Reg(UInt(log2Up(lenVec) bits)) init 0
-
-  // state machine
-  val fsm = new StateMachine {
-
-    val stateStart: State = new State with EntryPoint {
-      whenIsActive {
-        addr := addrVec(vecCounter)
-        wdata := dataVec(vecCounter).asBits
-        opcode := opcodeVec(vecCounter).asBits
-        when(vecCounter < lenVec) {
-          vecCounter := vecCounter + 1
-        } otherwise {
-          vecCounter := 0
-        }
-        goto(stateWrite)
-      }
+    // component IOs
+    val io = new Bundle {
+      val bmb = Bmb(param)
     }
 
-    val stateWrite: State = new State {
-      whenIsActive {
-        valid := True
-        goto(stateWaitReady)
-      }
+    // convert list to vec
+    val lenVec = data.length
+    val addrVec = Vec(UInt(param.access.addressWidth bits), lenVec)
+    val dataVec = Vec(UInt(param.access.dataWidth bits), lenVec)
+    val opcodeVec = Vec(UInt(1 bits), lenVec)
+    for (i <- 0 until lenVec) {
+      addrVec(i) := data(i)._1
+      dataVec(i) := data(i)._2
+      opcodeVec(i) := data(i)._3
     }
 
-    val stateWaitReady: State = new State {
-      whenIsActive {
-        when(io.bmb.cmd.ready) {
-          valid := False
-          goto(stateWait)
+    // registers
+    val addr = Reg(UInt(param.access.addressWidth bits)) init 0
+    val wdata = Reg(Bits(param.access.dataWidth bits)) init 0
+    val opcode = Reg(Bits(1 bits)) init 0
+    val valid = Reg(Bool) init False
+    val ready = Reg(Bool) init True
+
+    // counters
+    val waitCounterMax = waitTicks
+    val waitCounter = Reg(UInt(log2Up(waitCounterMax) bits)) init 0
+    val vecCounter = Reg(UInt(log2Up(lenVec) bits)) init 0
+
+    // state machine
+    val fsm = new StateMachine {
+
+      val stateStart: State = new State with EntryPoint {
+        whenIsActive {
+          addr := addrVec(vecCounter)
+          wdata := dataVec(vecCounter).asBits
+          opcode := opcodeVec(vecCounter).asBits
+          when(vecCounter < lenVec) {
+            vecCounter := vecCounter + 1
+          } otherwise {
+            vecCounter := 0
+          }
+          goto(stateWrite)
         }
       }
-    }
 
-    val stateWait: State = new State {
-      onEntry(waitCounter := 0)
-      whenIsActive {
-        when(waitCounter < waitCounterMax) {
-          waitCounter := waitCounter + 1
-        } otherwise {
-          goto(stateStart)
+      val stateWrite: State = new State {
+        whenIsActive {
+          valid := True
+          goto(stateWaitReady)
         }
       }
-    }
 
-    // io
-    io.bmb.cmd.valid := valid
-    io.bmb.cmd.payload.fragment.address := addr
-    io.bmb.cmd.payload.fragment.opcode := opcode
-    io.bmb.cmd.payload.fragment.data := wdata
-    io.bmb.rsp.ready := ready
-  }
+      val stateWaitReady: State = new State {
+        whenIsActive {
+          when(io.bmb.cmd.ready) {
+            valid := False
+            goto(stateWait)
+          }
+        }
+      }
+
+      val stateWait: State = new State {
+        onEntry(waitCounter := 0)
+        whenIsActive {
+          when(waitCounter < waitCounterMax) {
+            waitCounter := waitCounter + 1
+          } otherwise {
+            goto(stateStart)
+          }
+        }
+      }
+
+      // io
+      io.bmb.cmd.valid := valid
+      io.bmb.cmd.payload.fragment.address := addr
+      io.bmb.cmd.payload.fragment.opcode := opcode
+      io.bmb.cmd.payload.fragment.data := wdata
+      io.bmb.rsp.ready := ready
+    }
+  })
 }
