@@ -37,6 +37,14 @@ import scala.reflect.internal.util.NoPosition.source
 
 
 class SramDesign(waitTicks : Int) extends PinOutComp {
+
+  // Handles
+  //val m = Handle[Bmb]
+  //val s = Handle[Bmb]
+  //val cap = Handle[BmbAccessCapabilities]
+  //val req = Handle[BmbAccessParameter]
+  //val mp = Handle[AddressMapping]
+
   // config
   val ledWidth = 8
   val dataWidth = 32
@@ -52,28 +60,20 @@ class SramDesign(waitTicks : Int) extends PinOutComp {
     sources = mutable.LinkedHashMap(0 -> source)
   )
 
-  // bmb master
-  val bmbMaster = new MasterBmbComp(waitTicks = waitTicks)
-  bmbMaster.bmbParam.load(requirements.toBmbParameter())
+  // bmb interconnect
+  val bmbInterconnect = BmbInterconnectGenerator()
+  bmbInterconnect.setDefaultArbitration(BmbInterconnectGenerator.STATIC_PRIORITY)
 
-  //val capabilities = BmbAccessCapabilities(addressWidth = addrWidth, dataWidth = dataWidth)
-  //val bmbInterconnect = BmbInterconnectGenerator()
-  //bmbInterconnect.setDefaultArbitration(BmbInterconnectGenerator.STATIC_PRIORITY)
-  // master
-  //val m = Handle[Bmb]
-  //bmbInterconnect.addMaster(
-  //  accessRequirements = Handle(requirements),
-  //  bus = m
+  // bmb master
+  val bmbMaster = new MasterBmbComp(waitTicks=waitTicks)
+  bmbMaster.bmbParam.load(requirements.toBmbParameter())
+  bmbInterconnect.addMaster(accessRequirements=Handle(requirements), bus=Handle(bmbMaster.logic.io.bmb))
+
+  // bmb ram
+  //var bmbRam = BmbOnChipRam(
+  //  p = requirements.toBmbParameter(),
+  //  size = 64 KiB
   //)
-  // slave
-  //val s = Handle[Bmb]
-  //bmbInterconnect.addSlave(
-  //  accessRequirements = Handle(requirements),
-  //  accessCapabilities = Handle(capabilities),
-  //  bus = s,
-  //  mapping = Handle(SingleMapping(0x00000))
-  //)
-  //bmbInterconnect.addConnection(m, List(s))
 
   // APB Area
   val apbArea = Handle(new Area {
@@ -123,15 +123,16 @@ class SramDesign(waitTicks : Int) extends PinOutComp {
       slaves = apbSlaves
     )
 
-    // connect resized apb
-    //bmbApbBridge.io.output.PADDR.resized <> ledCtrl.io.apb.PADDR
-    //bmbApbBridge.io.output.PWRITE <> ledCtrl.io.apb.PWRITE
-    //bmbApbBridge.io.output.PENABLE <> ledCtrl.io.apb.PENABLE
-    //bmbApbBridge.io.output.PWDATA <> ledCtrl.io.apb.PWDATA
-    //bmbApbBridge.io.output.PREADY <> ledCtrl.io.apb.PREADY
-    //bmbApbBridge.io.output.PSEL <> ledCtrl.io.apb.PSEL
+    //bmbMaster.logic.io.bmb <> bmbApbBridge.io.input
 
-    bmbMaster.logic.io.bmb <> bmbApbBridge.io.input
+    // slave
+    bmbInterconnect.addSlave(
+      accessRequirements=Handle(requirements),
+      accessCapabilities=Handle(BmbAccessCapabilities(addressWidth=addrWidth, dataWidth=dataWidth)),
+      bus=Handle(bmbApbBridge.io.input),
+      mapping=Handle(SingleMapping(0x00000))
+    )
+    bmbInterconnect.addConnection(Handle(bmbMaster.logic.io.bmb), Handle(bmbApbBridge.io.input))
   })
 
   // load experimental data ==========
@@ -141,8 +142,28 @@ class SramDesign(waitTicks : Int) extends PinOutComp {
   for (i <- 0 until 11) {
     data = (0x00004, i % 2, 1) :: data // GPIO Write x 10 values
   }
+  // dummy data
+  for (i <- 0 until 10) {
+    data = (0xFFFFF, 0, 1) :: data
+  }
+  // uart data
+  var str = "Hello, world! \n\r"
+  for (s <- str) {
+    data = (0x10000, s.toInt, 1) :: data // UART print "Hello, world!"
+  }
+  // dummy data
+  for (i <- 0 until 10) {
+    data = (0xFFFFF, 0, 1) :: data
+  }
+  // load data
   bmbMaster.cmdData.load(data.reverse)
 
+  // load
+  //m.load(bmbMaster.logic.io.bmb)
+  //s.load(apbArea.bmbApbBridge.io.input)
+  //cap.load(BmbAccessCapabilities(addressWidth=addrWidth, dataWidth=dataWidth))
+  //req.load(requirements)
+  //mp.load(SingleMapping(0x00000))
 
   // connect io ======================
   LED0 := apbArea.ledCtrl.io.gpio.write.asBits(0) // heart beat
