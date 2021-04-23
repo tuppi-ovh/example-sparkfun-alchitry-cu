@@ -22,25 +22,30 @@ package MasterBmbComp
 
 import spinal.core.{UInt, _}
 import spinal.lib._
-import spinal.lib.bus.bmb.{Bmb, BmbParameter}
+import spinal.lib.bus.bmb.{Bmb, BmbAccessParameter, BmbParameter}
 import spinal.lib.fsm._
 import spinal.lib.generator.Handle
 
-class MasterBmbComp(waitTicks : Int) extends Component {
-  // Handles
-  val bmbParam = Handle[BmbParameter]
-  val cmdData = Handle[List[(Int, Int, Int)]]
+class MasterBmbComp(accessRequirements : Handle[BmbAccessParameter],
+                    cmdData : Handle[List[(Int, Int, Int)]],
+                    waitTicks : Int) extends Component {
+
+  // log
+  println("MasterBmbComp")
 
   // elaborate Handles
   val logic = Handle(new Area {
 
+    // log
+    println("MasterBmbComp logic")
+
     // handles
-    val param = bmbParam.get
+    val param = accessRequirements.toBmbParameter()
     val data = cmdData.get
 
     // component IOs
     val io = new Bundle {
-      val bmb = Bmb(param)
+      val bmb = master(Bmb(param))
     }
 
     // convert list to vec
